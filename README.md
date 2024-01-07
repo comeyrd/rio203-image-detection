@@ -2,7 +2,7 @@
 
 Tiny python (FastAPI) backend for image detection using PyTesseract and OpenCV.
 
-## Notes
+## Notes WIP
 
 - `inRange` threshold are hardcoded which isn't ideal
 - a good thing would be to calculate the shear angle using the box coords
