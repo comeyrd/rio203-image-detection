@@ -1,11 +1,21 @@
 <body onload="init();">
-    <h1>Take a snapshot of the current video stream</h1>
-    Click on the Start WebCam button.
+    <div>
+        <h1>Take a snapshot of the current video stream</h1>
+        Click on the Start WebCam button.
+    </div>
+    <div>
+        <label for="urlServ">URL serveur</label>
+        <input type="text" id="urlServ" value="/detection" placeholder="url serveur" />
+    </div>
+    <div>
+        <label for="sendToURL">Send to URL</label>
+        <input type="checkbox" id="sendToURL" />
+    </div>
     <p>
         <button onclick="startWebcam();">Start WebCam</button>
         <button onclick="stopWebcam();">Stop WebCam</button>
-        <!-- <button onclick="snapshot();">Take Snapshot</button>
-        <button onclick="send_snapshot();">Send Snapshot</button> -->
+        <button onclick="snapshot();">Take Snapshot</button>
+        <button onclick="send_snapshot();">Send Snapshot</button>
     </p>
     <video onclick="snapshot(this);" width="400" height="400" id="video" controls autoplay></video>
     <p>Screenshots :</p>
@@ -14,15 +24,43 @@
         <canvas id="myCanvas" width="400" height="400"></canvas>
     </p>
 </body>
-
 <script>
+    const SECONDS_INTERVAL = 5000;
+    let interval;
     navigator.getUserMedia =
         navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
     var video;
     var webcamStream;
+    var canvas, ctx;
 
-    function startWebcam() {
+    const urlServElement = document.getElementById("urlServ");
+    let url = urlServElement.value;
+    urlServElement.addEventListener("input", (e) => {
+        const { value } = e.target;
+        console.log(value);
+        url = value;
+    });
+
+    const sendToURLElement = document.getElementById("sendToURL");
+    let sendToURL = sendToURLElement.checked;
+    sendToURLElement.addEventListener("change", (e) => {
+        const { checked } = e.target;
+        if (checked) {
+            interval = setInterval(() => {
+                if (webcamStream && video) {
+                    snapshot();
+                    send_snapshot();
+                } else {
+                    alert("Webcam not started");
+                }
+            }, SECONDS_INTERVAL);
+        } else {
+            clearInterval(interval);
+        }
+    });
+
+    const startWebcam = async () => {
         if (navigator.getUserMedia) {
             navigator.getUserMedia(
                 // constraints
@@ -30,86 +68,46 @@
                     video: true,
                     audio: false,
                 },
-
-                // successCallback
-                function (localMediaStream) {
+                (stream) => {
                     video = document.querySelector("video");
-                    video.srcObject = localMediaStream;
-                    webcamStream = localMediaStream;
-                    let stream_settings = localMediaStream.getVideoTracks()[0].getSettings();
+                    video.srcObject = stream;
+                    webcamStream = stream;
+                    let stream_settings = stream.getVideoTracks()[0].getSettings();
                     canvas.width = stream_settings.width;
                     canvas.height = stream_settings.height;
                 },
-
-                // errorCallback
-                function (err) {
+                (err) => {
                     console.log("The following error occured: " + err);
                 }
             );
-            setInterval(() => {
-                snapshot();
-                send_snapshot();
-            }, 5000);
         } else {
-            console.log("getUserMedia not supported");
+            alert("navigator.getUserMedia() not supported");
         }
-    }
+    };
 
     function stopWebcam() {
         webcamStream.getTracks().forEach(function (track) {
             track.stop();
         });
+        webcamStream = null;
     }
-    //---------------------
-    // TAKE A SNAPSHOT CODE
-    //---------------------
-    var canvas, ctx;
 
     function init() {
-        // Get the canvas and obtain a context for
-        // drawing in it
         canvas = document.getElementById("myCanvas");
         ctx = canvas.getContext("2d");
     }
 
     function snapshot() {
-        // Draws current image from the video element into the canvas
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    }
-    function b64toBlob(b64Data, contentType, sliceSize) {
-        contentType = contentType || "";
-        sliceSize = sliceSize || 512;
-
-        var byteCharacters = atob(b64Data); // window.atob(b64Data)
-        var byteArrays = [];
-
-        for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-            var slice = byteCharacters.slice(offset, offset + sliceSize);
-
-            var byteNumbers = new Array(slice.length);
-            for (var i = 0; i < slice.length; i++) {
-                byteNumbers[i] = slice.charCodeAt(i);
-            }
-
-            var byteArray = new Uint8Array(byteNumbers);
-
-            byteArrays.push(byteArray);
-        }
-
-        var blob = new Blob(byteArrays, { type: contentType });
-        return blob;
     }
 
     function send_snapshot() {
-        var ImageURL = canvas.toDataURL("image/jpeg"); // 'photo' is your base64 image
-
-        // Split the base64 string in data and contentType
-        var block = ImageURL.split(";"); // get the real base64 content of the file
+        var ImageURL = canvas.toDataURL("image/jpeg");
+        var block = ImageURL.split(";");
         var realData = block[1].split(",")[1];
 
-        // Create a FormData and append the file with "image" as parameter name
         var formDataToUpload = new FormData();
         formDataToUpload.append("image", realData);
-        fetch("/detection", { method: "POST", body: formDataToUpload });
+        fetch(url, { method: "POST", body: formDataToUpload });
     }
 </script>
