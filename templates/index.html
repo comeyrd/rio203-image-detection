@@ -18,6 +18,7 @@
         <button onclick="send_snapshot();">Send Snapshot</button>
     </p>
     <video onclick="snapshot(this);" width="400" height="400" id="video" controls autoplay></video>
+    <div id="output"></div>
     <p>Screenshots :</p>
 
     <p>
@@ -25,7 +26,7 @@
     </p>
 </body>
 <script>
-    const SECONDS_INTERVAL = 5000;
+    const SECONDS_INTERVAL = 20000;
     let interval;
     navigator.getUserMedia =
         navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
@@ -108,6 +109,22 @@
 
         var formDataToUpload = new FormData();
         formDataToUpload.append("image", realData);
-        fetch(url, { method: "POST", body: formDataToUpload });
+        fetch(url, { method: "POST", body: formDataToUpload }).then(async response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return await response.json();
+            })
+            .then(data => {
+                console.log(data)
+                document.getElementById("output").innerHTML = "";
+                document.getElementById("output").innerHTML = `<p>${data.message}</p>`;
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById("output").innerHTML = "";
+                document.getElementById("output").innerHTML = `<p>${error}</p>`;
+            });
     }
 </script>
