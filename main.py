@@ -5,8 +5,18 @@ from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import subprocess
+import requests
 app = FastAPI()
+central_server = "https://parking-rio.rezel.net/"
 
+def sendplaque(plaque):
+    central_server_url = central_server + "carDetected"  # Replace "endpoint" with the actual endpoint on the central server
+    ans = requests.post(central_server_url, json={"plaque": plaque})
+    print(ans)
+
+def most_p_plaque(output):
+    print(output)
+    return "JE 823 KE"
 
 app.mount("/static", StaticFiles(directory="templates"), name="static")
 
@@ -19,8 +29,12 @@ def image_detection(image: Annotated[str, Form()]):
     with open("plaque.png", "wb") as fh:
         fh.write(img)
     result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
-    print(result.stdout)
-    return {"message": result.stdout}
+    plaque = most_p_plaque(result.stdout)
+    if plaque == "error":
+        return {"message":"No License Plate Found"}
+    else:
+        sendplaque(plaque)
+        return {"message": plaque}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -34,3 +48,4 @@ if __name__ == "__main__":
 
     uvicorn.run(app, host="127.0.0.1", port=8000)
     #uvicorn.run(app, host="0.0.0.0", port=8000) PROD
+
