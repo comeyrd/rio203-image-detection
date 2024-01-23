@@ -6,6 +6,8 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import subprocess
 import requests
+import re
+
 app = FastAPI()
 central_server = "https://parking-rio.rezel.net/"
 
@@ -15,8 +17,12 @@ def sendplaque(plaque):
     print(ans)
 
 def most_p_plaque(output):
-    print(output)
-    return "JE 823 KE"
+    match = re.search(r'\b([A-Z0-9]+)\s+confidence:', output)
+    if match:
+        plate_number = match.group(1)
+        return plate_number
+    else :
+        return "error"
 
 app.mount("/static", StaticFiles(directory="templates"), name="static")
 
