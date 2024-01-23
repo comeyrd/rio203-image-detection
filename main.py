@@ -31,8 +31,12 @@ def image_detection(image: Annotated[str, Form()]):
     with open(IMG_NAME, "wb") as fh:
         fh.write(img)
     result = subprocess.run(COMMAND, shell=True, check=True, text=True, capture_output=True)
-    print(result.stdout)
-    return {"message": result.stdout}
+    plaque = most_p_plaque(result.stdout)
+    if plaque == "error":
+        return {"message":"No License Plate Found"}
+    else:
+        sendplaque(plaque)
+        return {"message": plaque}
 
 
 @app.get("/", response_class=HTMLResponse)
