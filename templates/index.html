@@ -103,6 +103,9 @@
     }
 
     function send_snapshot() {
+        document.getElementById("output").innerHTML = "";
+        document.getElementById("output").innerHTML = "<p>Request in Progess...</p>";
+
         var ImageURL = canvas.toDataURL("image/jpeg");
         var block = ImageURL.split(";");
         var realData = block[1].split(",")[1];
