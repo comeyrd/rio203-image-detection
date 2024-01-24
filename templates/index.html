@@ -11,12 +11,21 @@
         <label for="sendToURL">Send to URL</label>
         <input type="checkbox" id="sendToURL" />
     </div>
+    <br>
     <p>
         <button onclick="startWebcam();">Start WebCam</button>
         <button onclick="stopWebcam();">Stop WebCam</button>
         <button onclick="snapshot();">Take Snapshot</button>
         <button onclick="send_snapshot();">Send Snapshot</button>
     </p>
+    <label>
+        <input type="radio" name="direction" id="in" value="in" checked> In
+      </label>
+      
+      <label>
+        <input type="radio" name="direction" id="out" value="out"> Out
+      </label>
+      <br>
     <video onclick="snapshot(this);" width="400" height="400" id="video" controls autoplay></video>
     <div id="output"></div>
     <p>Screenshots :</p>
@@ -104,14 +113,23 @@
 
     function send_snapshot() {
         document.getElementById("output").innerHTML = "";
-        document.getElementById("output").innerHTML = "<p>Request in Progess...</p>";
+        document.getElementById("output").innerHTML = "<p>Request in Progress...</p>";
 
         var ImageURL = canvas.toDataURL("image/jpeg");
         var block = ImageURL.split(";");
         var realData = block[1].split(",")[1];
+        const inRadioButton = document.getElementById('in');
+        const outRadioButton = document.getElementById('out');
+        var direction = "";
 
+        if (inRadioButton.checked) {
+            direction = 'in';
+        } else if (outRadioButton.checked) {
+            direction = 'out';
+        }
         var formDataToUpload = new FormData();
         formDataToUpload.append("image", realData);
+        formDataToUpload.append("direction", direction);
         fetch(url, { method: "POST", body: formDataToUpload }).then(async response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -121,7 +139,20 @@
             .then(data => {
                 console.log(data)
                 document.getElementById("output").innerHTML = "";
-                document.getElementById("output").innerHTML = `<p>${data.message}</p>`;
+                let srv = "";
+                if(data.direction == "out"){
+                if(data.srv.error){
+                    srv = ` ${data.srv.error} `;
+                    if(data.srv.needToPay){
+                        srv += ` You need to pay : ${data.srv.needToPay}` ;
+                    }
+                }else{
+                    srv = `You have paid :${data.srv.paid}, balance ${data.srv.balance}`;
+                }
+            }else if(data.direction=="in"){
+                srv = "You can enter";
+            }
+                document.getElementById("output").innerHTML = `<p>{ plaque : ${data.message}, direction : ${data.direction} , srv : ${srv}} </p>`;
 
             })
             .catch(error => {
