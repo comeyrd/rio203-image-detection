@@ -1,22 +1,9 @@
 <body onload="init();">
     <div>
-        <h1>Take a snapshot of the current video stream</h1>
-        Click on the Start WebCam button.
+        <h1>Parking Camera</h1>
     </div>
-    <div>
-        <label for="urlServ">URL serveur</label>
-        <input type="text" id="urlServ" value="/detection" placeholder="url serveur" />
-    </div>
-    <div>
-        <label for="sendToURL">Send to URL</label>
-        <input type="checkbox" id="sendToURL" />
-    </div>
-    <br>
     <p>
-        <button onclick="startWebcam();">Start WebCam</button>
-        <button onclick="stopWebcam();">Stop WebCam</button>
-        <button onclick="snapshot();">Take Snapshot</button>
-        <button onclick="send_snapshot();">Send Snapshot</button>
+        <button onclick="snapshot();">Take a Picture</button>
     </p>
     <label>
         <input type="radio" name="direction" id="in" value="in" checked> In
@@ -26,49 +13,25 @@
         <input type="radio" name="direction" id="out" value="out"> Out
       </label>
       <br>
-    <video onclick="snapshot(this);" width="400" height="400" id="video" controls autoplay></video>
-    <div id="output"></div>
-    <p>Screenshots :</p>
+      <p>Picture :</p>
+      <div id="output"></div>
 
-    <p>
-        <canvas id="myCanvas" width="400" height="400"></canvas>
-    </p>
+          <canvas id="myCanvas" width="400" height="400"></canvas>
+
+    <video onclick="snapshot(this);" width="400" height="400" id="video" controls autoplay></video>
+<p>        <button onclick="startWebcam();">Start WebCam</button>
+    <button onclick="stopWebcam();">Stop WebCam</button>
+    <button onclick="send_snapshot();">Send Snapshot</button>
+
+</p>
 </body>
 <script>
-    const SECONDS_INTERVAL = 20000;
-    let interval;
     navigator.getUserMedia =
         navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
     var video;
     var webcamStream;
     var canvas, ctx;
-
-    const urlServElement = document.getElementById("urlServ");
-    let url = urlServElement.value;
-    urlServElement.addEventListener("input", (e) => {
-        const { value } = e.target;
-        console.log(value);
-        url = value;
-    });
-
-    const sendToURLElement = document.getElementById("sendToURL");
-    let sendToURL = sendToURLElement.checked;
-    sendToURLElement.addEventListener("change", (e) => {
-        const { checked } = e.target;
-        if (checked) {
-            interval = setInterval(() => {
-                if (webcamStream && video) {
-                    snapshot();
-                    send_snapshot();
-                } else {
-                    alert("Webcam not started");
-                }
-            }, SECONDS_INTERVAL);
-        } else {
-            clearInterval(interval);
-        }
-    });
 
     const startWebcam = async () => {
         if (navigator.getUserMedia) {
@@ -109,9 +72,11 @@
 
     function snapshot() {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        send_snapshot();
     }
 
     function send_snapshot() {
+        const url = "/detection";
         document.getElementById("output").innerHTML = "";
         document.getElementById("output").innerHTML = "<p>Request in Progress...</p>";
 
@@ -161,4 +126,5 @@
                 document.getElementById("output").innerHTML = `<p>${error}</p>`;
             });
     }
+    startWebcam();
 </script>
