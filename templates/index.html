@@ -12,7 +12,13 @@
       <label>
         <input type="radio" name="direction" id="out" value="out"> Out
       </label>
+      <br><br>
+      <label>
+        Parking id : 
+        <input type="text" name="parkingid" id="parkingid" />
+      </label>
       <br>
+      <hr>
       <p>Picture :</p>
       <div id="output"></div>
 
@@ -85,6 +91,7 @@
         var realData = block[1].split(",")[1];
         const inRadioButton = document.getElementById('in');
         const outRadioButton = document.getElementById('out');
+        const parkingid = document.getElementById('parkingid');
         var direction = "";
 
         if (inRadioButton.checked) {
@@ -95,6 +102,8 @@
         var formDataToUpload = new FormData();
         formDataToUpload.append("image", realData);
         formDataToUpload.append("direction", direction);
+        console.log(parkingid.value);
+        formDataToUpload.append("parkingid",parkingid.value);
         fetch(url, { method: "POST", body: formDataToUpload }).then(async response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -114,9 +123,12 @@
                 }else{
                     srv = `You have paid :${data.srv.paid}, balance ${data.srv.balance}`;
                 }
-            }else if(data.direction=="in"){
-                srv = "You can enter";
-            }
+            }else{ 
+                if(data.srv.error){
+                srv = data.srv.error;
+                }else{
+                srv = JSON.stringify(data.srv);
+                }}
                 document.getElementById("output").innerHTML = `<p>{ plaque : ${data.message}, direction : ${data.direction} , srv : ${srv}} </p>`;
 
             })

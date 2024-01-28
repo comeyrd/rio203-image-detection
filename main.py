@@ -10,10 +10,10 @@ import re
 app = FastAPI()
 central_server = "https://parking-rio.rezel.net/"
 
-def sendplaque(plaque,direction):
-    central_server_url = central_server + "api/carDetected"  # Replace "endpoint" with the actual endpoint on the central server
+def sendplaque(plaque,direction,parkingid):
+    central_server_url = central_server + "api/carDetected" 
     try:
-        obj = {"plaque": plaque,"direction": direction}
+        obj = {"plaque": plaque,"direction": direction,"parkingid":parkingid}
         ans = requests.post(central_server_url, json=obj)
         ans.raise_for_status()
         return ans.json()
@@ -38,7 +38,7 @@ IMG_NAME = "plaque.png"
 COMMAND = f"bash -c 'source ~/.bashrc && alpr -c eu {IMG_NAME}'"
 
 @app.post("/detection")
-def image_detection(image: Annotated[str, Form()],direction: Annotated[str, Form()]):
+def image_detection(image: Annotated[str, Form()],direction: Annotated[str, Form()],parkingid: Annotated[str, Form()]):
     """do detection"""
     contents = image
     img = base64.b64decode(contents)
@@ -49,8 +49,8 @@ def image_detection(image: Annotated[str, Form()],direction: Annotated[str, Form
     if plaque == "error":
         return {"message":"No License Plate Found"}
     else:
-        json = sendplaque(plaque,direction)
-        return {"message": plaque, "direction":direction,"srv":json}
+        json = sendplaque(plaque,direction,parkingid)
+        return {"message": plaque, "direction":direction,"parkingid":parkingid,"srv":json}
 
 
 @app.get("/", response_class=HTMLResponse)
