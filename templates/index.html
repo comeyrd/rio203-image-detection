@@ -114,6 +114,9 @@
                 console.log(data)
                 document.getElementById("output").innerHTML = "";
                 let srv = "";
+                if(data.error){
+                    document.getElementById("output").innerHTML = `<p>{ plaque : ${data.error} </p>`;
+                }else{
                 if(data.direction == "out"){
                 if(data.srv.error){
                     srv = ` ${data.srv.error} `;
@@ -130,7 +133,7 @@
                 srv = JSON.stringify(data.srv);
                 }}
                 document.getElementById("output").innerHTML = `<p>{ plaque : ${data.message}, direction : ${data.direction} , srv : ${srv}} </p>`;
-
+            }
             })
             .catch(error => {
                 console.error('Error:', error);

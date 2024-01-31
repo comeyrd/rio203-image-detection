@@ -47,7 +47,7 @@ def image_detection(image: Annotated[str, Form()],direction: Annotated[str, Form
     result = subprocess.run(COMMAND, shell=True, check=True, text=True, capture_output=True)
     plaque = most_p_plaque(result.stdout)
     if plaque == "error":
-        return {"message":"No License Plate Found"}
+        return {"error":"No License Plate Found"}
     else:
         json = sendplaque(plaque,direction,parkingid)
         return {"message": plaque, "direction":direction,"parkingid":parkingid,"srv":json}
